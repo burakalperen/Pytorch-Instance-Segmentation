@@ -1,3 +1,4 @@
+import os
 import cv2
 import numpy as np 
 import torch
@@ -5,9 +6,9 @@ import random
 import torchvision.transforms as transforms
 from loguru import logger
 from PIL import Image
+from natsort import natsorted
 from torchvision import transforms
 from train import get_model_instance_segmentation
-
 
 
 def predict(model,image,device):
@@ -88,8 +89,7 @@ def visualization(image,scores,labels,boxes,masks,mask_threshold = 0.5):
         cv2.rectangle(image,(int(boxes[i][0]),int(boxes[i][1])),(int(boxes[i][2]),int(boxes[i][3])),color=color,thickness=2)
         # cv2.putText(image,labels[i],(boxes[i][0],boxes[i][1] - 10), cv2.FONT_HERSHEY_SIMPLEX,1,color,thickness=2)
         
-    cv2.imshow("Image",image)
-    cv2.waitKey(0)
+    return image
 
 
 if __name__ == "__main__":
@@ -98,23 +98,37 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     num_classes = 2
 
-    COLORS = np.random.uniform(0,255,size = (num_classes,3))
+    COLORS = np.random.uniform(0,255,size = (255,3))
     
-    orig_img = cv2.imread("./deneme_data/PNGImages/FudanPed00001.png")
-    img = Image.fromarray(orig_img).convert("RGB")
+    # orig_img = cv2.imread("./deneme_data/PNGImages/FudanPed00001.png")
+    # img = Image.fromarray(orig_img).convert("RGB")
 
     model = get_model_instance_segmentation(num_classes)
     model.load_state_dict(torch.load("./checkpoints/PennFudanPed.pth"))
     model.to(device)
 
-    # image_dir = "./PennFudanPed/PNGImages/"
-    # images = natsorted()
+    image_dir = "./PennFudanPed/PNGImages/"
+    images = natsorted(os.listdir(image_dir))
+
+    for image_name in images:
+        orig_img = cv2.imread(image_dir + image_name)
+        img = Image.fromarray(orig_img).convert("RGB") 
+
+        labels,scores,boxes,masks = predict(model,img,device)
+        f_scores,f_labels,f_boxes,f_masks = threshold_detection(labels,scores,boxes,masks,threshold=0.3)
+        image = visualization(orig_img,f_scores,f_labels,f_boxes,f_masks)
+
+        cv2.imshow("Image",image)
+        key = cv2.waitKey(0)
+
+        if key == ord('d'):
+            pass
+        elif key == ord('q'):
+            exit()
 
 
 
 
-    labels,scores,boxes,masks = predict(model,img,device)
-    f_scores,f_labels,f_boxes,f_masks = threshold_detection(labels,scores,boxes,masks,threshold=0.3)
-    visualization(orig_img,f_scores,f_labels,f_boxes,f_masks)
+
 
 
