@@ -1,3 +1,4 @@
+from os import PRIO_PGRP
 import torch
 import torchvision
 from  torchsummary import summary
@@ -89,13 +90,12 @@ def main():
     params = [p for p in model.parameters() if p.requires_grad]
     optimizer = torch.optim.SGD(params,lr=0.005,momentum=0.9,weight_decay=0.0005)
     lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=3,gamma=0.1)
-    num_epochs = 5100
+    num_epochs = 10
     for epoch in range(num_epochs):
         train_one_epoch(model,optimizer,data_loader,device,epoch,print_freq = 1)
         lr_scheduler.step()
-
-    torch.save(model.state_dict(),"./checkpoints/PennFudanPed.pth")
-
+        torch.save(model.state_dict(),"./checkpoints/PennFudanPed.pth")
+        logger.info("Model is saved.")
 
 if __name__ == "__main__":
     

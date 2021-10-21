@@ -104,8 +104,14 @@ if __name__ == "__main__":
     img = Image.fromarray(orig_img).convert("RGB")
 
     model = get_model_instance_segmentation(num_classes)
-    model.load_state_dict(torch.load("./checkpoints/model.pth"))
+    model.load_state_dict(torch.load("./checkpoints/PennFudanPed.pth"))
     model.to(device)
+
+    # image_dir = "./PennFudanPed/PNGImages/"
+    # images = natsorted()
+
+
+
 
     labels,scores,boxes,masks = predict(model,img,device)
     f_scores,f_labels,f_boxes,f_masks = threshold_detection(labels,scores,boxes,masks,threshold=0.3)
